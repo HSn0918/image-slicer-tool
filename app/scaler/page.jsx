@@ -1,6 +1,12 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function ScalerPage() {
   const dropzoneRef = useRef(null);
@@ -77,15 +83,15 @@ export default function ScalerPage() {
     if (!dropzone) return undefined;
     const onDrag = (e) => {
       e.preventDefault();
-      dropzone.classList.add('border-foreground', 'bg-gray-50');
+      dropzone.classList.add('border-primary', 'bg-background');
     };
     const onLeave = (e) => {
       e.preventDefault();
-      dropzone.classList.remove('border-foreground', 'bg-gray-50');
+      dropzone.classList.remove('border-primary', 'bg-background');
     };
     const onDrop = (e) => {
       e.preventDefault();
-      dropzone.classList.remove('border-foreground', 'bg-gray-50');
+      dropzone.classList.remove('border-primary', 'bg-background');
       handleFiles(e.dataTransfer.files);
     };
     dropzone.addEventListener('dragenter', onDrag);
@@ -254,112 +260,121 @@ export default function ScalerPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between pb-4 border-b border-gray-200">
+      <div className="flex flex-col gap-4 border-b border-border/80 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">等比例缩放器</h1>
-          <p className="text-sm text-gray-500 mt-1">长边缩放 // 批量处理 // ZIP 导出</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">等比例缩放器</h1>
+          <p className="mt-1 text-sm text-muted-foreground">长边缩放 // 批量处理 // ZIP 导出</p>
         </div>
-      </header>
-
-      <div className="vercel-card p-6 space-y-6 bg-white">
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="space-y-2">
-             <label className="vercel-label">目标长边 (px)</label>
-             <div className="flex items-center gap-2">
-               <input
-                 id="sizeInput"
-                 type="number"
-                 min={1}
-                 value={size}
-                 onChange={(e) => setSize(Math.max(1, Number(e.target.value) || 1))}
-                 className="vercel-input w-32"
-               />
-             </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3 items-center">
-             <label htmlFor="fileInput" className="vercel-button vercel-button-secondary cursor-pointer flex items-center gap-2">
-               <span>加载图片</span>
-             </label>
-             <input id="fileInput" type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
-             
-             <button className="vercel-button vercel-button-secondary" onClick={importFromClipboard} disabled={!canClipboardRead}>
-               粘贴剪贴板
-             </button>
-
-             <div className="w-px h-8 bg-gray-200 mx-2"></div>
-
-             <button 
-               className="vercel-button vercel-button-primary" 
-               disabled={!outputs.length} 
-               onClick={downloadZip}
-             >
-               下载 ZIP
-             </button>
-             <button className="vercel-button vercel-button-secondary text-red-600 hover:border-red-200 hover:bg-red-50" onClick={clearResults}>
-               清空
-             </button>
-          </div>
-        </div>
-        
-        <div ref={dropzoneRef} className="border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 text-center p-10 transition-all duration-200 hover:border-gray-300" data-dropzone>
-          <strong className="text-foreground text-base block mb-2">拖拽图片到此处</strong>
-          <div className="text-xs text-gray-500 uppercase tracking-widest">支持批量处理</div>
-        </div>
-        <div id="info" className="text-xs text-gray-400 font-mono text-center pt-2">{info}</div>
+        <Badge variant="secondary" className="w-fit">
+          批量工具
+        </Badge>
       </div>
+
+      <Card>
+        <CardContent className="space-y-6">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="sizeInput">目标长边 (px)</Label>
+              <Input
+                id="sizeInput"
+                type="number"
+                min={1}
+                value={size}
+                onChange={(e) => setSize(Math.max(1, Number(e.target.value) || 1))}
+                className="w-32"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <input id="fileInput" type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+              <Button asChild variant="secondary">
+                <label htmlFor="fileInput" className="cursor-pointer">加载图片</label>
+              </Button>
+              <Button type="button" variant="secondary" onClick={importFromClipboard} disabled={!canClipboardRead}>
+                粘贴剪贴板
+              </Button>
+              <div className="hidden h-8 w-px bg-border sm:block" />
+              <Button type="button" variant="default" disabled={!outputs.length} onClick={downloadZip}>
+                下载 ZIP
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                onClick={clearResults}
+              >
+                清空
+              </Button>
+            </div>
+          </div>
+
+          <div
+            ref={dropzoneRef}
+            className="rounded-xl border-2 border-dashed border-border bg-muted/40 p-10 text-center transition-all duration-200 hover:border-muted-foreground"
+            data-dropzone
+          >
+            <strong className="block text-base font-medium text-foreground">拖拽图片到此处</strong>
+            <div className="text-xs text-muted-foreground uppercase tracking-widest">支持批量处理</div>
+          </div>
+          <p id="info" className="text-center text-xs font-mono text-muted-foreground">{info}</p>
+        </CardContent>
+      </Card>
 
       <section id="results" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-live="polite">
         {outputs.map((item) => (
-          <div key={item.name} className="vercel-card p-3 group hover:shadow-md">
-            <div className="flex justify-between items-start mb-3">
-               <span className="text-[10px] px-2 py-1 rounded bg-gray-100 text-gray-600 font-medium truncate max-w-[150px] border border-gray-200">
-                 {item.name}
-               </span>
-            </div>
-            
-            <div className="border border-gray-100 rounded bg-gray-50 grid place-items-center h-40 overflow-hidden mb-3 relative">
-              <img src={item.dataUrl} alt="preview" className="max-w-full max-h-full object-contain p-2" />
-            </div>
-
-            <div className="flex justify-between text-[10px] text-gray-500 font-mono mb-3 border-b border-gray-100 pb-2">
-              <span>原: {item.original.width}x{item.original.height}</span>
-              <span className="text-foreground font-semibold">新: {item.resized.width}x{item.resized.height}</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <a href={item.dataUrl} download={item.name} className="vercel-button vercel-button-secondary text-[10px] py-1 px-1 h-8">
-                下载
-              </a>
-              <button
-                className="vercel-button vercel-button-secondary text-[10px] py-1 px-1 h-8"
-                onClick={async (e) => {
-                  const btn = e.currentTarget;
-                  btn.disabled = true;
-                  const originalText = btn.innerText;
-                  btn.innerText = '已复制';
-                  try {
-                    if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
-                      const blob = await (await fetch(item.dataUrl)).blob();
-                      await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-                    } else if (navigator.clipboard?.writeText) {
-                      await navigator.clipboard.writeText(item.dataUrl);
+          <Card key={item.name} className="group">
+            <CardHeader className="space-y-2">
+              <CardTitle className="text-sm font-semibold leading-tight">{item.name}</CardTitle>
+              <CardDescription className="font-mono text-xs text-muted-foreground">
+                {item.original.width}x{item.original.height} → {item.resized.width}x{item.resized.height}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex h-40 items-center justify-center rounded-md border bg-muted/50">
+                <img src={item.dataUrl} alt="preview" className="max-h-full max-w-full object-contain p-2" />
+              </div>
+              <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                <span>原: {item.original.width}x{item.original.height}</span>
+                <span className="font-semibold text-primary">新: {item.resized.width}x{item.resized.height}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild variant="secondary" size="sm">
+                  <a href={item.dataUrl} download={item.name}>
+                    下载
+                  </a>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={async (e) => {
+                    const btn = e.currentTarget;
+                    btn.disabled = true;
+                    const originalText = btn.innerText;
+                    btn.innerText = '已复制';
+                    try {
+                      if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+                        const blob = await (await fetch(item.dataUrl)).blob();
+                        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                      } else if (navigator.clipboard?.writeText) {
+                        await navigator.clipboard.writeText(item.dataUrl);
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      btn.innerText = '错误';
+                    } finally {
+                      setTimeout(() => {
+                        btn.innerText = '复制';
+                        btn.disabled = false;
+                      }, 1200);
                     }
-                  } catch (err) {
-                    console.error(err);
-                    btn.innerText = '错误';
-                  } finally {
-                    setTimeout(() => {
-                      btn.innerText = '复制';
-                      btn.disabled = false;
-                    }, 1200);
-                  }
-                }}
-              >
-                复制
-              </button>
-            </div>
-          </div>
+                  }}
+                >
+                  复制
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </section>
     </div>

@@ -1,9 +1,16 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import Cropper from 'cropperjs';
-import JSZip from 'jszip';
-import 'cropperjs/dist/cropper.css';
+import { useCallback, useEffect, useRef, useState } from "react";
+import Cropper from "cropperjs";
+import JSZip from "jszip";
+import "cropperjs/dist/cropper.css";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const ratioPresets = [
   { label: '16:9', value: 1.7777778 },
@@ -298,137 +305,167 @@ export default function SlicerPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between pb-4 border-b border-gray-200">
+      <div className="flex flex-col gap-4 border-b border-border/80 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">图片裁剪分片</h1>
-          <p className="text-sm text-gray-500 mt-1">支持拖拽上传，自定义网格分割并导出 ZIP。</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">图片裁剪分片</h1>
+          <p className="mt-1 text-sm text-muted-foreground">支持拖拽上传，自定义网格分割并导出 ZIP。</p>
         </div>
-        <div className="flex items-center gap-2">
-            <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600">本地处理</span>
-        </div>
-      </header>
+        <Badge variant="secondary" className="w-fit">
+          本地处理
+        </Badge>
+      </div>
 
-      <main className="grid gap-6 lg:grid-cols-[1fr,300px] items-start">
-        <section 
-          ref={dropZoneRef} 
-          className="vercel-card p-1 min-h-[600px] flex items-center justify-center relative bg-white overflow-hidden cursor-pointer"
+      <div className="grid gap-6 lg:grid-cols-[1fr,320px]">
+        <Card
+          ref={dropZoneRef}
+          className="min-h-[600px] cursor-pointer overflow-hidden border-dashed"
           onClick={() => !hasImage && fileInputRef.current?.click()}
         >
-          <div className="relative w-full h-full flex items-center justify-center rounded bg-gray-50 min-h-[590px] overflow-hidden">
-            <input 
-              type="file" 
+          <div className="relative flex h-full w-full items-center justify-center bg-muted/40">
+            <input
+              type="file"
               ref={fileInputRef}
-              accept="image/*" 
-              hidden 
-              onChange={(e) => handleFiles(e.target.files)} 
+              accept="image/*"
+              hidden
+              onChange={(e) => handleFiles(e.target.files)}
             />
             {!hasImage && (
-              <div className="text-center space-y-4">
-                <div className="w-12 h-12 mx-auto rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+              <div className="space-y-4 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
                   </svg>
                 </div>
                 <div>
                   <h3 className="text-base font-medium text-foreground">拖拽图片到此处</h3>
-                  <p className="text-sm text-gray-500 mt-1">或点击区域选择</p>
+                  <p className="mt-1 text-sm text-muted-foreground">或点击区域选择</p>
                 </div>
-                <button className="vercel-button vercel-button-secondary pointer-events-none">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                >
                   选择文件
-                </button>
+                </Button>
               </div>
             )}
             <img
               ref={imageRef}
               alt="Preview"
-              className={`max-w-full max-h-full object-contain select-none ${hasImage ? 'block' : 'hidden'}`}
+              className={`max-w-full max-h-full select-none object-contain ${hasImage ? 'block' : 'hidden'}`}
             />
             <div ref={overlayRef} className="absolute pointer-events-none" />
           </div>
-        </section>
+        </Card>
 
-        <aside className="space-y-6">
-          {/* Aspect Ratio */}
-          <div className="space-y-3">
-            <h3 className="vercel-label">纵横比</h3>
-            <div className="flex flex-wrap gap-2">
-              {ratioPresets.map((item) => (
-                <button
-                  key={item.label}
-                  className={`flex-1 px-3 py-1.5 text-sm rounded-md border transition-all ${ratio === String(item.value) ? 'bg-foreground text-background border-foreground' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
-                  onClick={() => onRatioClick(String(item.value))}
-                >
-                  {item.label}
-                </button>
-              ))}
-              <button
-                className={`w-full px-3 py-1.5 text-sm rounded-md border transition-all ${ratio === 'free' ? 'bg-foreground text-background border-foreground' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base">纵横比</CardTitle>
+              <CardDescription>可快速限定裁剪框比例</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                {ratioPresets.map((item) => (
+                  <Button
+                    key={item.label}
+                    type="button"
+                    size="sm"
+                    variant={ratio === String(item.value) ? 'default' : 'outline'}
+                    className="w-full"
+                    onClick={() => onRatioClick(String(item.value))}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant={ratio === 'free' ? 'default' : 'outline'}
+                className="w-full"
                 onClick={() => onRatioClick('free')}
               >
-                自由 (默认)
-              </button>
-            </div>
-          </div>
+                自由（默认）
+              </Button>
+            </CardContent>
+          </Card>
 
-          {/* Grid Config */}
-          <div className="space-y-3">
-            <h3 className="vercel-label">网格配置</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">列数 (Cols)</label>
-                <input
-                  className="vercel-input w-full"
-                  type="number"
-                  min="1"
-                  value={cols}
-                  onChange={(e) => setCols(Math.max(1, Number(e.target.value) || 1))}
-                />
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base">网格配置</CardTitle>
+              <CardDescription>定义导出分片数量</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="cols">列数 (Cols)</Label>
+                  <Input
+                    id="cols"
+                    type="number"
+                    min="1"
+                    value={cols}
+                    onChange={(e) => setCols(Math.max(1, Number(e.target.value) || 1))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rows">行数 (Rows)</Label>
+                  <Input
+                    id="rows"
+                    type="number"
+                    min="1"
+                    value={rows}
+                    onChange={(e) => setRows(Math.max(1, Number(e.target.value) || 1))}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">行数 (Rows)</label>
-                <input
-                  className="vercel-input w-full"
-                  type="number"
-                  min="1"
-                  value={rows}
-                  onChange={(e) => setRows(Math.max(1, Number(e.target.value) || 1))}
-                />
+              <p className="text-right text-xs text-muted-foreground">预览：{cols} x {rows} 分割</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base">操作</CardTitle>
+              <CardDescription>快捷控制与导出</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="button" variant="secondary" size="sm" onClick={onFit}>
+                  重新适配
+                </Button>
+                <Button type="button" variant="secondary" size="sm" onClick={onFlip}>
+                  水平翻转
+                </Button>
               </div>
-            </div>
-            <p className="text-xs text-gray-400 text-right">预览：{cols} x {rows} 分割</p>
-          </div>
+              <Button type="button" className="w-full" onClick={onDownload}>
+                导出 ZIP
+              </Button>
+              <Button type="button" variant="outline" className="w-full" onClick={onReset}>
+                重置
+              </Button>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className={cn('h-2 w-2 rounded-full', status.includes('错误') ? 'bg-destructive' : 'bg-emerald-500')} />
+                <span>{status}</span>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Controls */}
-          <div className="space-y-3 pt-4 border-t border-gray-200">
-            <h3 className="vercel-label">操作</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button className="vercel-button vercel-button-secondary text-xs" onClick={onFit}>
-                重新适配
-              </button>
-              <button className="vercel-button vercel-button-secondary text-xs" onClick={onFlip}>
-                水平翻转
-              </button>
-            </div>
-            <button className="vercel-button vercel-button-primary w-full mt-2" onClick={onDownload}>
-              导出 ZIP
-            </button>
-            <button className="vercel-button vercel-button-secondary w-full" onClick={onReset}>
-              重置
-            </button>
-            
-            <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
-              <span className={`w-2 h-2 rounded-full ${status.includes('错误') ? 'bg-red-500' : 'bg-green-500'}`}></span>
-              <span>{status}</span>
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base">裁剪预览</CardTitle>
+              <CardDescription>实时缩略图</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div ref={previewRef} className="h-32 w-full overflow-hidden rounded-md border bg-muted/40" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
-          {/* Preview Thumbnail */}
-          <div className="space-y-2">
-            <h3 className="vercel-label">裁剪预览</h3>
-            <div ref={previewRef} className="border border-gray-200 rounded-md bg-gray-50 h-32 overflow-hidden" />
-          </div>
-        </aside>
-      </main>
     </div>
   );
 }
