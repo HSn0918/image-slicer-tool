@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Crop, Maximize2 } from 'lucide-react';
+import { ArrowRight, Crop, Film, Maximize2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -20,6 +20,13 @@ const tools = [
     description: '长边缩放与批量导出，自动重命名。',
     detail: '批量拖拽 / 粘贴 / ZIP 打包',
     icon: Maximize2
+  },
+  {
+    href: '/gif-maker',
+    title: '序列帧 GIF 生成',
+    description: '按网格拆分精灵图，设置帧率后一键导出 GIF。',
+    detail: '默认 6×4，可自定义行列与间隔',
+    icon: Film
   }
 ];
 

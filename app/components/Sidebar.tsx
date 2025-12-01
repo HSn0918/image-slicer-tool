@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Crop, Maximize2 } from "lucide-react";
+import { Crop, Film, Maximize2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -22,6 +22,12 @@ const nav = [
     label: "等比例缩放",
     description: "批量缩放 / ZIP",
     icon: Maximize2
+  },
+  {
+    href: "/gif-maker",
+    label: "序列帧 GIF",
+    description: "网格配置 / GIF 导出",
+    icon: Film
   }
 ];
 

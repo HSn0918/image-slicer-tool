@@ -1,10 +1,8 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
-import { Github } from "lucide-react";
 
 import Sidebar from "./components/Sidebar";
 import Providers from "./providers";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { type ReactNode } from "react";
 
