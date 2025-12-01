@@ -16,7 +16,10 @@ const inter = Inter({
 
 export const metadata = {
   title: "image-tool",
-  description: "图片裁剪分片与等比例缩放，纯前端本地处理"
+  description: "图片裁剪分片与等比例缩放，纯前端本地处理",
+  icons: {
+    icon: "/icon.svg", // Reference to the SVG icon in the public directory
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
