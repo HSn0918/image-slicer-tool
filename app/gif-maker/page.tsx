@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import gifshot from "gifshot";
 import { Film } from "lucide-react";
+import Cropper from "cropperjs";
+import "cropperjs/dist/cropper.css";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,12 +32,18 @@ export default function GifMakerPage() {
   const dropzoneRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const cropperRef = useRef<Cropper | null>(null);
   const objectUrlRef = useRef<string | null>(null);
 
   const cleanupObjectUrl = useCallback(() => {
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
+    }
+    if (cropperRef.current) {
+      cropperRef.current.destroy();
+      cropperRef.current = null;
     }
   }, []);
 
@@ -129,6 +137,37 @@ export default function GifMakerPage() {
     };
   }, [handleFiles, handlePaste]);
 
+  const updateOverlay = useCallback(() => {
+    const overlay = overlayRef.current;
+    const cropper = cropperRef.current;
+    if (!overlay || !cropper) return;
+    const box = cropper.getCropBoxData();
+    if (!box.width || !box.height) {
+      overlay.style.display = "none";
+      return;
+    }
+    overlay.style.display = "block";
+    overlay.style.left = `${box.left}px`;
+    overlay.style.top = `${box.top}px`;
+    overlay.style.width = `${box.width}px`;
+    overlay.style.height = `${box.height}px`;
+    overlay.innerHTML = "";
+    for (let c = 1; c < cols; c++) {
+      const v = document.createElement("div");
+      v.className = "absolute border-l border-white/70 top-0 shadow-[1px_0_0_0_rgba(0,0,0,0.2)]";
+      v.style.left = `${(c / cols) * 100}%`;
+      v.style.height = "100%";
+      overlay.appendChild(v);
+    }
+    for (let r = 1; r < rows; r++) {
+      const h = document.createElement("div");
+      h.className = "absolute border-t border-white/70 left-0 shadow-[0_1px_0_0_rgba(0,0,0,0.2)]";
+      h.style.top = `${(r / rows) * 100}%`;
+      h.style.width = "100%";
+      overlay.appendChild(h);
+    }
+  }, [cols, rows]);
+
   const onImageLoaded = useCallback(() => {
     if (!imageRef.current) return;
     const { naturalWidth, naturalHeight } = imageRef.current;
@@ -138,7 +177,25 @@ export default function GifMakerPage() {
       height: naturalHeight
     }));
     setStatus(`已加载 ${naturalWidth}x${naturalHeight} ，默认 ${rows * cols} 帧`);
-  }, [cols, rows]);
+    if (cropperRef.current) {
+      cropperRef.current.destroy();
+    }
+    const imgNode = imageRef.current;
+    if (imgNode) {
+      cropperRef.current = new Cropper(imgNode, {
+        viewMode: 1,
+        dragMode: "move",
+        autoCropArea: 1,
+        background: false,
+        responsive: true,
+        crop: updateOverlay
+      });
+    }
+  }, [cols, rows, updateOverlay]);
+
+  useEffect(() => {
+    updateOverlay();
+  }, [updateOverlay, sheetSrc]);
 
   const generateGif = useCallback(() => {
     const img = imageRef.current;
@@ -225,7 +282,7 @@ export default function GifMakerPage() {
               </div>
               <div>
                 <CardTitle className="text-2xl">序列帧 GIF 生成器</CardTitle>
-                <CardDescription>读取精灵图 / 网格切片 / 一键输出 GIF 动画。</CardDescription>
+                <CardDescription>读取图 / 网格切片 / 一键输出 GIF 动画。</CardDescription>
               </div>
             </div>
             <Badge variant="secondary" className="text-[11px]">
@@ -240,12 +297,12 @@ export default function GifMakerPage() {
         <Card>
           <CardHeader className="space-y-4">
             <CardTitle>素材区</CardTitle>
-            <CardDescription>拖拽 / 点击 / 粘贴任意精灵图，左侧为缩略预览。</CardDescription>
+            <CardDescription>拖拽 / 点击 / 粘贴任意图，左侧为缩略预览。</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div
               ref={dropzoneRef}
-              className="relative flex min-h-[280px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/30 p-6 text-center transition"
+              className="relative flex min-h-[320px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/30 p-6 text-center transition"
             >
               <input
                 ref={fileInputRef}
@@ -258,14 +315,17 @@ export default function GifMakerPage() {
               />
               {sheetSrc ? (
                 <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    ref={imageRef}
-                    src={sheetSrc}
-                    alt="sprite sheet"
-                    onLoad={onImageLoaded}
-                    className="max-h-[220px] w-full rounded-md border bg-background object-contain"
-                  />
+                  <div className="relative max-h-[280px] w-full rounded-md border bg-background">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      ref={imageRef}
+                      src={sheetSrc}
+                      alt="sprite sheet"
+                      onLoad={onImageLoaded}
+                      className="h-full w-full rounded-md object-contain"
+                    />
+                    <div ref={overlayRef} className="absolute inset-0" />
+                  </div>
                   <p className="mt-3 text-xs text-muted-foreground">
                     {sheetInfo && sheetInfo.width && sheetInfo.height ? `${sheetInfo.width}x${sheetInfo.height}` : "加载中…"} · 共 {framesCount} 帧
                   </p>
@@ -300,7 +360,9 @@ export default function GifMakerPage() {
               </div>
               <div className="rounded-lg border border-border/70 bg-background/80 p-3 text-left">
                 <p className="text-[11px] uppercase text-muted-foreground">文件名</p>
-                <p className="truncate text-sm font-semibold">{sheetInfo?.name ?? "未命名"}</p>
+                <p className="truncate text-sm font-semibold" title={sheetInfo?.name ?? "未命名"}>
+                  {sheetInfo?.name ?? "未命名"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -358,7 +420,7 @@ export default function GifMakerPage() {
             </div>
 
             <div className="rounded-lg border border-dashed border-border/70 bg-muted/10 p-4 text-xs text-muted-foreground">
-              如果源图尺寸无法被行列整除，将自动向下取整裁剪；建议使用规律精灵图以获得最佳效果。
+              如果源图尺寸无法被行列整除，将自动向下取整裁剪；建议使用规律图以获得最佳效果。
             </div>
 
             <div className="flex flex-wrap gap-3">

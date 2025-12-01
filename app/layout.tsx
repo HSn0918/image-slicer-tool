@@ -1,10 +1,10 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 
-import Sidebar from "./components/Sidebar";
 import Providers from "./providers";
 import { cn } from "@/lib/utils";
 import { type ReactNode } from "react";
+import { AppFrame } from "@/components/app-frame";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,49 +21,13 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-
   return (
-
     <html lang="zh-CN" suppressHydrationWarning>
-
-      <body className={cn("h-screen overflow-hidden bg-background font-sans antialiased", inter.variable)}>
-
+      <body className={cn("min-h-screen bg-muted/30 font-sans antialiased", inter.variable)}>
         <Providers>
-
-          <div className="grid h-full lg:grid-cols-[260px_1fr]">
-
-            <aside className="hidden h-full flex-col border-r bg-muted/30 lg:flex">
-
-              <div className="flex-1 overflow-y-auto p-6">
-
-                <Sidebar />
-
-              </div>
-
-            </aside>
-
-            <main className="flex h-full min-w-0 flex-col overflow-hidden">
-
-              <div className="flex-1 overflow-y-auto p-6">
-
-                {children}
-
-              </div>
-
-            </main>
-
-          </div>
-
+          <AppFrame>{children}</AppFrame>
         </Providers>
-
       </body>
-
     </html>
-
   );
-
 }
-
-
-
-
