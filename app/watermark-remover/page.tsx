@@ -29,6 +29,14 @@ const WATERMARK_DEFAULTS = {
   extendedRatio: 0.16,
 };
 
+const PROGRESS_STEPS = [
+  { label: "模型", threshold: 50 },
+  { label: "读取", threshold: 65 },
+  { label: "预处理", threshold: 80 },
+  { label: "推理", threshold: 92 },
+  { label: "合成", threshold: 100 },
+];
+
 type OrtSession = {
   run: (feeds: Record<string, unknown>) => Promise<Record<string, any>>;
 };
@@ -223,6 +231,13 @@ export default function WatermarkRemoverPage() {
   );
 
   const hasModelFile = Boolean(modelFileName);
+  const progressPercent = Math.min(100, Math.max(0, progress));
+  const activeStepIndex =
+    progressPercent === 0
+      ? -1
+      : PROGRESS_STEPS.findIndex((step) => progressPercent <= step.threshold);
+  const resolvedActiveIndex =
+    activeStepIndex === -1 ? PROGRESS_STEPS.length - 1 : activeStepIndex;
 
   useEffect(() => {
     if (!imageFile) {
@@ -650,14 +665,41 @@ export default function WatermarkRemoverPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>进度</span>
+                  <span>{progressPercent}%</span>
+                </div>
                 <div className="h-2 w-full rounded-full bg-muted">
                   <div
                     className="h-2 rounded-full bg-primary transition-all"
-                    style={{ width: `${progress}%` }}
+                    style={{ width: `${progressPercent}%` }}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">{status}</p>
+                <p className="text-xs text-muted-foreground">状态：{status}</p>
+                <div className="flex flex-wrap gap-2 text-[11px]">
+                  {PROGRESS_STEPS.map((step, index) => {
+                    const done = progressPercent >= step.threshold;
+                    const active = index === resolvedActiveIndex;
+                    return (
+                      <span
+                        key={step.label}
+                        className={cn(
+                          "rounded-full border px-2 py-0.5",
+                          done && "border-primary bg-primary text-primary-foreground",
+                          !done &&
+                            active &&
+                            "border-primary text-primary",
+                          !done &&
+                            !active &&
+                            "border-border/60 text-muted-foreground",
+                        )}
+                      >
+                        {step.label}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
