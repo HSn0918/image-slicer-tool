@@ -29,11 +29,10 @@ const WATERMARK_DEFAULTS = {
   extendedRatio: 0.16,
 };
 
-const PROGRESS_STEPS = [
-  { label: "模型", threshold: 50 },
-  { label: "读取", threshold: 65 },
-  { label: "预处理", threshold: 80 },
-  { label: "推理", threshold: 92 },
+const PROCESS_STEPS = [
+  { label: "读取", threshold: 30 },
+  { label: "预处理", threshold: 55 },
+  { label: "推理", threshold: 85 },
   { label: "合成", threshold: 100 },
 ];
 
@@ -211,13 +210,15 @@ export default function WatermarkRemoverPage() {
   const [dragActive, setDragActive] = useState(false);
   const [ortReady, setOrtReady] = useState(false);
   const [modelStatus, setModelStatus] = useState("未选择模型文件");
+  const [modelMessage, setModelMessage] = useState("等待模型加载");
   const [modelLoading, setModelLoading] = useState(false);
+  const [modelProgress, setModelProgress] = useState(0);
   const [modelFileName, setModelFileName] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState("等待图片");
+  const [processProgress, setProcessProgress] = useState(0);
+  const [processStatus, setProcessStatus] = useState("等待图片");
   const [busy, setBusy] = useState(false);
 
   const [widthRatio, setWidthRatio] = useState(
@@ -231,13 +232,12 @@ export default function WatermarkRemoverPage() {
   );
 
   const hasModelFile = Boolean(modelFileName);
-  const progressPercent = Math.min(100, Math.max(0, progress));
+  const modelReady = modelStatus === "已就绪";
+  const processPercent = Math.min(100, Math.max(0, processProgress));
   const activeStepIndex =
-    progressPercent === 0
+    processPercent === 0
       ? -1
-      : PROGRESS_STEPS.findIndex((step) => progressPercent <= step.threshold);
-  const resolvedActiveIndex =
-    activeStepIndex === -1 ? PROGRESS_STEPS.length - 1 : activeStepIndex;
+      : PROCESS_STEPS.findIndex((step) => processPercent <= step.threshold);
 
   useEffect(() => {
     if (!imageFile) {
@@ -281,18 +281,21 @@ export default function WatermarkRemoverPage() {
     const source = getModelSource();
     if (!source) {
       setModelStatus("未选择模型文件");
-      setStatus("请先下载并选择模型文件");
+      setModelMessage("请先下载并选择模型文件");
+      setModelProgress(0);
       return;
     }
     if (modelRef.current.session && modelRef.current.source === source) {
       setModelStatus("已就绪");
+      setModelMessage("模型已就绪，可开始处理");
+      setModelProgress(100);
       return;
     }
 
     setModelLoading(true);
     setModelStatus("加载中");
-    setProgress(10);
-    setStatus("加载模型中...");
+    setModelProgress(10);
+    setModelMessage("加载模型中...");
 
     try {
       let buffer = modelRef.current.buffer;
@@ -300,16 +303,18 @@ export default function WatermarkRemoverPage() {
         if (!modelFileRef.current) {
           throw new Error("未选择模型文件");
         }
-        setStatus("读取模型文件...");
+        setModelMessage("读取模型文件...");
         const arrayBuffer = await modelFileRef.current.arrayBuffer();
         buffer = new Uint8Array(arrayBuffer);
-        setProgress(40);
+        setModelProgress(45);
       }
 
       if (!buffer) {
         throw new Error("模型加载失败");
       }
 
+      setModelMessage("创建推理会话...");
+      setModelProgress(80);
       const session = await ort.InferenceSession.create(buffer, {
         executionProviders: ["wasm"],
         graphOptimizationLevel: "basic",
@@ -322,15 +327,15 @@ export default function WatermarkRemoverPage() {
       };
 
       setModelStatus("已就绪");
-      setProgress(50);
-      setStatus("模型已就绪");
+      setModelProgress(100);
+      setModelMessage("模型已就绪，可开始处理");
     } catch (error) {
       console.error(error);
       setModelStatus("加载失败");
-      setStatus(
+      setModelMessage(
         error instanceof Error ? `模型加载失败：${error.message}` : "模型加载失败",
       );
-      setProgress(0);
+      setModelProgress(0);
     } finally {
       setModelLoading(false);
     }
@@ -339,6 +344,8 @@ export default function WatermarkRemoverPage() {
   const resetModel = () => {
     modelRef.current = { session: null, buffer: null, source: null };
     setModelStatus("未选择模型文件");
+    setModelMessage("等待模型加载");
+    setModelProgress(0);
   };
 
   const handleImageFile = useCallback((file: File) => {
@@ -348,8 +355,8 @@ export default function WatermarkRemoverPage() {
     }
     setImageFile(file);
     setResultUrl(null);
-    setStatus(`已选择图片：${file.name}`);
-    setProgress(0);
+    setProcessStatus(`已选择图片：${file.name}`);
+    setProcessProgress(0);
   }, []);
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -382,22 +389,26 @@ export default function WatermarkRemoverPage() {
 
   const processImage = async () => {
     if (!imageFile) {
-      setStatus("请先选择图片");
+      setProcessStatus("请先选择图片");
       return;
     }
     if (!modelFileRef.current) {
-      setStatus("请先下载并选择模型文件");
+      setProcessStatus("请先下载并选择模型文件");
+      return;
+    }
+    if (!modelReady) {
+      setProcessStatus("请先加载模型");
       return;
     }
     if (modelLoading) {
-      setStatus("模型加载中，请稍候");
+      setProcessStatus("模型加载中，请稍候");
       return;
     }
     if (busy) return;
     setBusy(true);
     setResultUrl(null);
-    setProgress(5);
-    setStatus("读取图片...");
+    setProcessProgress(5);
+    setProcessStatus("读取图片...");
 
     try {
       const ort = ensureOrt();
@@ -405,18 +416,15 @@ export default function WatermarkRemoverPage() {
         modelRef.current.session && modelRef.current.source === getModelSource()
           ? modelRef.current.session
           : null;
-      if (!session) {
-        await loadModel();
-      }
       if (!modelRef.current.session) {
         throw new Error("模型未就绪");
       }
 
-      setProgress((current) => Math.max(current, 55));
-      setStatus("加载图片数据...");
+      setProcessProgress((current) => Math.max(current, 30));
+      setProcessStatus("加载图片数据...");
       const bitmap = await createImageBitmap(imageFile);
-      setProgress((current) => Math.max(current, 65));
-      setStatus("准备 AI 输入...");
+      setProcessProgress((current) => Math.max(current, 40));
+      setProcessStatus("准备 AI 输入...");
       const resized = resizeImageForModel(bitmap);
       const { imageTensor, maskTensor } = preprocessImage(
         ort,
@@ -425,8 +433,8 @@ export default function WatermarkRemoverPage() {
         heightRatio,
       );
 
-      setProgress((current) => Math.max(current, 80));
-      setStatus("AI 去水印中...");
+      setProcessProgress((current) => Math.max(current, 60));
+      setProcessStatus("AI 去水印中...");
       const output = await modelRef.current.session.run({
         image: imageTensor,
         mask: maskTensor,
@@ -438,8 +446,8 @@ export default function WatermarkRemoverPage() {
         MODEL_INPUT_SIZE,
       );
 
-      setProgress((current) => Math.max(current, 92));
-      setStatus("合成高清结果...");
+      setProcessProgress((current) => Math.max(current, 85));
+      setProcessStatus("合成高清结果...");
       const finalDataUrl = composeFinalImage(
         bitmap,
         processed,
@@ -449,15 +457,15 @@ export default function WatermarkRemoverPage() {
       );
 
       setResultUrl(finalDataUrl);
-      setProgress(100);
-      setStatus("处理完成");
+      setProcessProgress(100);
+      setProcessStatus("处理完成");
       bitmap.close();
     } catch (error) {
       console.error(error);
-      setStatus(
+      setProcessStatus(
         error instanceof Error ? `处理失败：${error.message}` : "处理失败",
       );
-      setProgress(0);
+      setProcessProgress(0);
     } finally {
       setBusy(false);
     }
@@ -467,8 +475,8 @@ export default function WatermarkRemoverPage() {
     setImageFile(null);
     setResultUrl(null);
     setPreviewUrl(null);
-    setProgress(0);
-    setStatus("已清空");
+    setProcessProgress(0);
+    setProcessStatus("已清空");
   };
 
   return (
@@ -479,7 +487,8 @@ export default function WatermarkRemoverPage() {
         onLoad={() => setOrtReady(true)}
       />
 
-      <Card className="border-dashed border-muted bg-background/80">
+      <Card className="relative overflow-hidden border-border/70 bg-background/85 shadow-[0_22px_60px_-48px_rgba(59,41,27,0.35)]">
+        <div className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(48rem_40rem_at_0%_0%,rgba(208,162,119,0.18),transparent),radial-gradient(36rem_36rem_at_100%_10%,rgba(130,158,142,0.16),transparent)]" />
         <CardHeader className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
@@ -493,21 +502,26 @@ export default function WatermarkRemoverPage() {
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
+        <CardContent className="relative z-10 text-sm text-muted-foreground">
           使用前请先手动下载模型文件（lama_fp32.onnx），然后在下方选择加载。
         </CardContent>
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-[1.05fr_1.4fr]">
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>模型加载</CardTitle>
+          <Card className="border-border/70 bg-background/85 shadow-[0_18px_40px_-32px_rgba(59,41,27,0.3)]">
+            <CardHeader className="space-y-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl">模型加载</CardTitle>
+                <Badge variant={modelReady ? "default" : "secondary"}>
+                  {ortReady ? modelStatus : "运行时未就绪"}
+                </Badge>
+              </div>
+              <CardDescription>
+                模型仅在浏览器内存中缓存，刷新页面需要重新加载。
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
-              <p className="text-xs text-muted-foreground">
-                模型仅在浏览器内存中缓存，刷新页面需要重新加载。
-              </p>
               <div className="space-y-2">
                 <Label htmlFor="modelFile">选择模型文件（.onnx）</Label>
                 <Input
@@ -521,6 +535,7 @@ export default function WatermarkRemoverPage() {
                     setModelFileName(file?.name ?? null);
                     resetModel();
                     setModelStatus(file ? "待加载" : "未选择模型文件");
+                    setModelMessage(file ? "等待加载" : "等待模型加载");
                   }}
                 />
                 {modelFileName && (
@@ -530,7 +545,7 @@ export default function WatermarkRemoverPage() {
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   onClick={loadModel}
                   disabled={!ortReady || modelLoading || !hasModelFile}
@@ -542,16 +557,29 @@ export default function WatermarkRemoverPage() {
                     下载模型
                   </a>
                 </Button>
-                <Badge variant={modelStatus === "已就绪" ? "default" : "secondary"}>
-                  {ortReady ? modelStatus : "运行时未就绪"}
-                </Badge>
+              </div>
+
+              <div className="space-y-2 rounded-xl border border-border/70 bg-background/70 p-3">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>加载进度</span>
+                  <span>{Math.round(modelProgress)}%</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-muted">
+                  <div
+                    className="h-2 rounded-full bg-primary transition-all"
+                    style={{ width: `${Math.min(100, modelProgress)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  状态：{modelMessage}
+                </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/70 bg-background/85 shadow-[0_18px_40px_-32px_rgba(59,41,27,0.28)]">
             <CardHeader>
-              <CardTitle>水印区域配置</CardTitle>
+              <CardTitle className="text-xl">水印区域配置</CardTitle>
               <CardDescription>
                 仅处理右下角区域，默认 15%×15%。若水印偏大可适当提高。
               </CardDescription>
@@ -602,9 +630,9 @@ export default function WatermarkRemoverPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/70 bg-background/85 shadow-[0_18px_40px_-32px_rgba(59,41,27,0.28)]">
             <CardHeader>
-              <CardTitle>图片输入</CardTitle>
+              <CardTitle className="text-xl">图片输入</CardTitle>
               <CardDescription>
                 拖拽 / 点击 / 粘贴 图片，完成后再执行去水印。
               </CardDescription>
@@ -612,7 +640,7 @@ export default function WatermarkRemoverPage() {
             <CardContent>
               <div
                 className={cn(
-                  "flex min-h-[160px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center text-sm text-muted-foreground transition",
+                  "flex min-h-[160px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-muted/25 p-6 text-center text-sm text-muted-foreground transition",
                   dragActive && "border-primary bg-primary/10 text-foreground",
                 )}
                 onDragEnter={(event) => {
@@ -657,9 +685,9 @@ export default function WatermarkRemoverPage() {
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="border-border/70 bg-background/85 shadow-[0_18px_40px_-32px_rgba(59,41,27,0.28)]">
             <CardHeader>
-              <CardTitle>处理进度</CardTitle>
+              <CardTitle className="text-xl">处理进度</CardTitle>
               <CardDescription>
                 模型加载后即可开始，处理时间取决于图片大小与浏览器性能。
               </CardDescription>
@@ -668,19 +696,21 @@ export default function WatermarkRemoverPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>进度</span>
-                  <span>{progressPercent}%</span>
+                  <span>{processPercent}%</span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-muted">
                   <div
                     className="h-2 rounded-full bg-primary transition-all"
-                    style={{ width: `${progressPercent}%` }}
+                    style={{ width: `${processPercent}%` }}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">状态：{status}</p>
+                <p className="text-xs text-muted-foreground">
+                  状态：{processStatus}
+                </p>
                 <div className="flex flex-wrap gap-2 text-[11px]">
-                  {PROGRESS_STEPS.map((step, index) => {
-                    const done = progressPercent >= step.threshold;
-                    const active = index === resolvedActiveIndex;
+                  {PROCESS_STEPS.map((step, index) => {
+                    const done = processPercent >= step.threshold;
+                    const active = index === activeStepIndex;
                     return (
                       <span
                         key={step.label}
@@ -710,7 +740,8 @@ export default function WatermarkRemoverPage() {
                     busy ||
                     modelLoading ||
                     !ortReady ||
-                    !hasModelFile
+                    !hasModelFile ||
+                    !modelReady
                   }
                 >
                   {busy ? "处理中…" : "开始去水印"}
@@ -733,9 +764,9 @@ export default function WatermarkRemoverPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/70 bg-background/85 shadow-[0_18px_40px_-32px_rgba(59,41,27,0.28)]">
             <CardHeader>
-              <CardTitle>效果对比</CardTitle>
+              <CardTitle className="text-xl">效果对比</CardTitle>
               <CardDescription>
                 左右对比去水印前后差异。
               </CardDescription>

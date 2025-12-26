@@ -114,11 +114,11 @@ const steps = [
 
 export default function Home() {
   return (
-    <main className="space-y-10">
-      <section className="relative overflow-hidden rounded-[28px] border border-border/70 bg-background/80 p-8 shadow-[0_24px_80px_-60px_rgba(15,23,42,0.55)] backdrop-blur-sm animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+    <main className="space-y-12">
+      <section className="relative overflow-hidden rounded-[32px] border border-border/70 bg-background/85 p-8 shadow-[0_24px_70px_-55px_rgba(59,41,27,0.45)] backdrop-blur-sm animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 opacity-60 [background:radial-gradient(60rem_50rem_at_0%_0%,rgba(251,146,60,0.18),transparent),radial-gradient(50rem_40rem_at_100%_20%,rgba(56,189,248,0.16),transparent)] dark:opacity-35" />
-          <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(15,23,42,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.08)_1px,transparent_1px)] [background-size:26px_26px] dark:opacity-15" />
+          <div className="absolute inset-0 opacity-70 [background:radial-gradient(56rem_44rem_at_0%_0%,rgba(208,162,119,0.2),transparent),radial-gradient(40rem_32rem_at_100%_20%,rgba(130,158,142,0.16),transparent)] dark:opacity-35" />
+          <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(66,49,33,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(66,49,33,0.06)_1px,transparent_1px)] [background-size:30px_30px] dark:opacity-15" />
         </div>
 
         <div className="relative z-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
@@ -161,7 +161,7 @@ export default function Home() {
             {highlights.map((item, index) => (
               <div
                 key={item.label}
-                className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.45)] backdrop-blur-sm animate-in fade-in-0 slide-in-from-bottom-3"
+                className="rounded-2xl border border-border/70 bg-background/85 p-4 shadow-[0_18px_40px_-32px_rgba(59,41,27,0.4)] backdrop-blur-sm animate-in fade-in-0 slide-in-from-bottom-3"
                 style={{ animationDelay: `${index * 80}ms` }}
               >
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -177,7 +177,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+      <section className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
           {tools.map((tool, index) => {
             const Icon = tool.icon;
@@ -189,7 +189,7 @@ export default function Home() {
               >
                 <div
                   className={cn(
-                    "relative h-full overflow-hidden rounded-3xl border border-border/70 bg-background/80 p-6 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.45)] backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-1",
+                    "relative h-full overflow-hidden rounded-3xl border border-border/70 bg-background/85 p-6 shadow-[0_24px_60px_-50px_rgba(59,41,27,0.42)] backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-1",
                     tool.border,
                     "animate-in fade-in-0 slide-in-from-bottom-4",
                   )}
@@ -232,43 +232,11 @@ export default function Home() {
                       {tool.tag}
                     </span>
                   </div>
-                  <ArrowRight className="absolute bottom-5 right-5 h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-foreground" />
                 </div>
               </Link>
             );
           })}
         </div>
-
-        <aside className="relative overflow-hidden rounded-3xl border border-border/70 bg-background/80 p-6 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.45)] backdrop-blur-sm">
-          <div className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(35rem_35rem_at_0%_0%,rgba(244,114,94,0.16),transparent),radial-gradient(30rem_30rem_at_100%_0%,rgba(14,165,233,0.14),transparent)] dark:opacity-35" />
-          <div className="relative z-10">
-            <h2 className="font-display text-2xl">推荐流程</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              让素材处理更像编辑流程，关注一致性与可复用参数。
-            </p>
-            <ol className="mt-6 space-y-4 text-sm">
-              {steps.map((step, index) => (
-                <li key={step.title} className="flex gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-background/80 text-xs font-semibold">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <p className="font-medium">{step.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {step.description}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-6 rounded-2xl border border-dashed border-border/70 bg-background/70 p-4 text-xs text-muted-foreground">
-              <p className="font-semibold text-foreground">本地引擎</p>
-              <p className="mt-2">
-                处理过程不会离开浏览器，适合内部素材与隐私图片的快速流转。
-              </p>
-            </div>
-          </div>
-        </aside>
       </section>
     </main>
   );

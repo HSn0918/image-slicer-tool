@@ -1,5 +1,5 @@
 import "./globals.css";
-import { Noto_Sans_SC, ZCOOL_XiaoWei } from "next/font/google";
+import { Noto_Sans_SC, Noto_Serif_SC } from "next/font/google";
 
 import Providers from "./providers";
 import { cn } from "@/lib/utils";
@@ -13,10 +13,10 @@ const notoSans = Noto_Sans_SC({
   variable: "--font-sans",
 });
 
-const zcoolXiaoWei = ZCOOL_XiaoWei({
+const notoSerif = Noto_Serif_SC({
   subsets: ["latin"],
   display: "swap",
-  weight: "400",
+  weight: ["400", "600", "700"],
   variable: "--font-display",
 });
 
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           notoSans.variable,
-          zcoolXiaoWei.variable,
+          notoSerif.variable,
         )}
       >
         <Providers>

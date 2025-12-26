@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Crop, Eraser, Film, Maximize2 } from "lucide-react";
+import { Crop, Eraser, Film, Home, Maximize2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,6 +10,12 @@ import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/theme-toggle";
 
 const nav = [
+  {
+    href: "/",
+    label: "首页",
+    description: "工具总览",
+    icon: Home,
+  },
   {
     href: "/slicer",
     label: "图片裁剪分片",
@@ -43,9 +49,12 @@ export default function Sidebar() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-display text-xl font-semibold leading-tight">
+          <Link
+            href="/"
+            className="cursor-pointer font-display text-xl font-semibold leading-tight"
+          >
             image-tool
-          </p>
+          </Link>
           <p className="text-xs text-muted-foreground">v1.0.0 · 本地运行</p>
         </div>
         <div className="flex items-center gap-2">
@@ -72,7 +81,7 @@ export default function Sidebar() {
                   variant: active ? "secondary" : "ghost",
                   size: "sm",
                 }),
-                "h-auto justify-between px-3 py-3 text-left font-medium",
+                "h-auto cursor-pointer justify-between px-3 py-3 text-left font-medium",
               )}
             >
               <span className="flex flex-col gap-0.5">
