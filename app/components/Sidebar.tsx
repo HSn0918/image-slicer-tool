@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { Crop, Eraser, Film, Maximize2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/theme-toggle";
@@ -44,7 +43,9 @@ export default function Sidebar() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-lg font-semibold leading-tight">image-tool</p>
+          <p className="font-display text-xl font-semibold leading-tight">
+            image-tool
+          </p>
           <p className="text-xs text-muted-foreground">v1.0.0 · 本地运行</p>
         </div>
         <div className="flex items-center gap-2">

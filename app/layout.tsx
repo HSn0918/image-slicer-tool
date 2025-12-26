@@ -1,15 +1,23 @@
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Noto_Sans_SC, ZCOOL_XiaoWei } from "next/font/google";
 
 import Providers from "./providers";
 import { cn } from "@/lib/utils";
 import { type ReactNode } from "react";
 import { AppFrame } from "@/components/app-frame";
 
-const inter = Inter({
+const notoSans = Noto_Sans_SC({
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
+});
+
+const zcoolXiaoWei = ZCOOL_XiaoWei({
+  subsets: ["latin"],
+  display: "swap",
+  weight: "400",
+  variable: "--font-display",
 });
 
 export const metadata = {
@@ -25,8 +33,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="zh-CN" suppressHydrationWarning>
       <body
         className={cn(
-          "min-h-screen bg-muted/30 font-sans antialiased",
-          inter.variable,
+          "min-h-screen bg-background font-sans antialiased",
+          notoSans.variable,
+          zcoolXiaoWei.variable,
         )}
       >
         <Providers>

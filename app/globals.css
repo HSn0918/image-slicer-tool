@@ -85,6 +85,10 @@
     @apply mx-auto px-8;
   }
 
+  .font-display {
+    font-family: var(--font-display-stack);
+  }
+
   :root {
     --radix-accordion-content-height: 0;
     --background: 0 0% 100%;
@@ -110,6 +114,8 @@
     --font-mono:
       ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
+    --font-display-stack: var(--font-display), "STKaiti", "KaiTi", "Songti SC",
+      serif;
   }
 
   .dark {
