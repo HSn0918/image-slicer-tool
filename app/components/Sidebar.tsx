@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Crop, Film, Maximize2 } from "lucide-react";
+import { Crop, Eraser, Film, Maximize2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -28,6 +28,12 @@ const nav = [
     label: "序列帧 GIF",
     description: "网格配置 / GIF 导出",
     icon: Film,
+  },
+  {
+    href: "/watermark-remover",
+    label: "Gemini 去水印",
+    description: "AI 修复 / 本地推理",
+    icon: Eraser,
   },
 ];
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Crop, Film, Maximize2 } from "lucide-react";
+import { ArrowRight, Crop, Eraser, Film, Maximize2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,6 +33,13 @@ const tools = [
     description: "按网格拆分精灵图，设置帧率后一键导出 GIF。",
     detail: "默认 6×4，可自定义行列与间隔",
     icon: Film,
+  },
+  {
+    href: "/watermark-remover",
+    title: "Gemini 去水印",
+    description: "使用 LaMa 模型移除 Gemini 水印。",
+    detail: "本地推理 / 支持手动模型加载",
+    icon: Eraser,
   },
 ];
 

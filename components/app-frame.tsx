@@ -24,7 +24,6 @@ export function AppFrame({ children }: { children: ReactNode }) {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">image-tool</span>
             <span>纯前端离线可用</span>
-            <span>裁剪分片 & 等比例缩放</span>
             <span>© HSn</span>
           </div>
           <Button asChild variant="outline" size="sm" className="gap-2">
